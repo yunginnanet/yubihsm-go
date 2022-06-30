@@ -54,15 +54,16 @@ func (c *HTTPConnector) Request(command *commands.CommandMessage) (data []byte, 
 
 // GetStatus requests the status of the HSM connector route /connector/status
 func (c *HTTPConnector) GetStatus() (status *StatusResponse, err error) {
-	res, err := http.DefaultClient.Get("http://" + c.URL + "/connector/status")
+	var res *http.Response
+	res, err = http.DefaultClient.Get("http://" + c.URL + "/connector/status")
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var data []byte
 	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	bodyString := string(data)
