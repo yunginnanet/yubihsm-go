@@ -39,7 +39,10 @@ func (c *HTTPConnector) Request(command *commands.CommandMessage) (data []byte, 
 	}
 
 	defer func() {
-		err = res.Body.Close()
+		closeErr := res.Body.Close()
+		if err == nil {
+			err = closeErr
+		}
 	}()
 
 	if res.StatusCode != http.StatusOK {
