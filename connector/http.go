@@ -82,5 +82,6 @@ func (c *HTTPConnector) GetStatus() (status *StatusResponse, err error) {
 	status.Port = values[11]
 
 	err = res.Body.Close()
-	return status, err
+
+	return
 }
