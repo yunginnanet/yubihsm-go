@@ -25,7 +25,7 @@ func NewHTTPConnector(url string) *HTTPConnector {
 }
 
 // Request encodes and executes a command on the HSM and returns the binary response
-func (c *HTTPConnector) Request(command *commands.CommandMessage) ([]byte, error) {
+func (c *HTTPConnector) Request(command *commands.CommandMessage) (data []byte, err error) {
 	requestData, err := command.Serialize()
 	if err != nil {
 		return nil, err
@@ -40,28 +40,31 @@ func (c *HTTPConnector) Request(command *commands.CommandMessage) ([]byte, error
 		return nil, fmt.Errorf("server returned non OK status code %d", res.StatusCode)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	defer func() {
+		err = res.Body.Close()
+	}()
+
+	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = res.Body.Close()
-	return data, nil
+	return
 }
 
 // GetStatus requests the status of the HSM connector route /connector/status
-func (c *HTTPConnector) GetStatus() (*StatusResponse, error) {
+func (c *HTTPConnector) GetStatus() (status *StatusResponse, err error) {
 	res, err := http.DefaultClient.Get("http://" + c.URL + "/connector/status")
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	var data []byte
+	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = res.Body.Close()
 	bodyString := string(data)
 	pairs := strings.Split(bodyString, "\n")
 
@@ -70,7 +73,7 @@ func (c *HTTPConnector) GetStatus() (*StatusResponse, error) {
 		values = append(values, strings.Split(pair, "=")...)
 	}
 
-	status := &StatusResponse{}
+	status = &StatusResponse{}
 	status.Status = Status(values[1])
 	status.Serial = values[3]
 	status.Version = values[5]
@@ -78,5 +81,6 @@ func (c *HTTPConnector) GetStatus() (*StatusResponse, error) {
 	status.Address = values[9]
 	status.Port = values[11]
 
-	return status, nil
+	err = res.Body.Close()
+	return status, err
 }
