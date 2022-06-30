@@ -26,27 +26,30 @@ func NewHTTPConnector(url string) *HTTPConnector {
 
 // Request encodes and executes a command on the HSM and returns the binary response
 func (c *HTTPConnector) Request(command *commands.CommandMessage) (data []byte, err error) {
-	requestData, err := command.Serialize()
+	var requestData []byte
+	requestData, err = command.Serialize()
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	res, err := http.DefaultClient.Post("http://"+c.URL+"/connector/api", "application/octet-stream", bytes.NewReader(requestData))
+	var res *http.Response
+	res, err = http.DefaultClient.Post("http://"+c.URL+"/connector/api", "application/octet-stream", bytes.NewReader(requestData))
 	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned non OK status code %d", res.StatusCode)
+		return
 	}
 
 	defer func() {
 		err = res.Body.Close()
 	}()
 
+	if res.StatusCode != http.StatusOK {
+		err = fmt.Errorf("server returned non OK status code %d", res.StatusCode)
+		return
+	}
+
 	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	return
