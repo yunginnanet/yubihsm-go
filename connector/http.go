@@ -48,9 +48,6 @@ func (c *HTTPConnector) Request(command *commands.CommandMessage) (data []byte, 
 	}
 
 	data, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		return
-	}
 
 	return
 }
