@@ -45,6 +45,7 @@ func (c *HTTPConnector) Request(command *commands.CommandMessage) ([]byte, error
 		return nil, err
 	}
 
+	_ = res.Body.Close()
 	return data, nil
 }
 
@@ -59,6 +60,8 @@ func (c *HTTPConnector) GetStatus() (*StatusResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	_ = res.Body.Close()
 	bodyString := string(data)
 	pairs := strings.Split(bodyString, "\n")
 
